@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Search, Download, Star, Award, ExternalLink, TrendingUp, Package, Filter, Grid, List, Bot, Zap, Target, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -165,6 +164,7 @@ const Index = () => {
   }, [products, currentPage, itemsPerPage]);
 
   const handleSearch = async () => {
+    console.log("VITE_API_URL =", import.meta.env.VITE_API_URL);
     if (!keyword.trim()) {
       toast({
         title: "⚠️ Champ requis",
@@ -177,21 +177,70 @@ const Index = () => {
     setIsLoading(true);
     setCurrentPage(1);
     
-    // Simulate API call with realistic delay
-    setTimeout(() => {
-      const { products: scrapedProducts, stats: scrapingStats } = generateEnhancedMockData(keyword);
-      console.log(`SynchroScale AI analysé ${scrapedProducts.length} produits pour: ${keyword}`);
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL;
+      if (!apiUrl) {
+        throw new Error("URL API non configurée");
+      }
+
+      const response = await fetch(`${apiUrl}/scrape`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json" 
+        },
+        body: JSON.stringify({ 
+          search_query: keyword, 
+          num_products: 50 
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erreur API: ${response.status}`);
+      }
+
+      const data = await response.json();
       
-      setProducts(scrapedProducts);
-      setTopProduct(scrapedProducts[0]);
-      setStats(scrapingStats);
+      if (!data.success) {
+        throw new Error(data.error || "Erreur lors du scraping");
+      }
+
+      // Mettre à jour les produits avec les vraies données du backend
+      setProducts(data.products || []);
+      setTopProduct(data.top_product || null);
+      
+      // Mettre à jour les statistiques avec les vraies données
+      if (data.stats) {
+        setStats({
+          avgPrice: data.stats.avg_price || 0,
+          avgRating: data.stats.avg_rating || 0,
+          totalReviews: data.stats.total_reviews || 0,
+          totalProducts: data.stats.total_products || 0
+        });
+      }
+      
+      // Détecter la langue pour l'affichage
+      const lang = detectLanguage(keyword);
+      setDetectedLanguage(lang === 'ar' ? 'Arabe' : lang === 'fr' ? 'Français' : 'Anglais');
+      
       setIsLoading(false);
       
       toast({
         title: "🤖 Analyse IA Terminée !",
-        description: `${scrapedProducts.length} produits analysés par SynchroScale AI`,
+        description: `${data.products?.length || 0} produits analysés par SynchroScale AI`,
       });
-    }, 2500);
+      
+      console.log(`SynchroScale AI analysé ${data.products?.length || 0} produits pour: ${keyword}`);
+      
+    } catch (error) {
+      console.error("Erreur lors de l'appel API:", error);
+      setIsLoading(false);
+      
+      toast({
+        title: "❌ Erreur API",
+        description: error instanceof Error ? error.message : "Impossible de récupérer les données du backend.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleDownloadCSV = () => {
