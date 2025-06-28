@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Search, Download, Star, Award, ExternalLink, TrendingUp, Package, Filter, Grid, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -36,60 +35,92 @@ const Index = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const itemsPerPage = 12;
 
-  // Simulation des données pour la démonstration avec plus de produits
-  const mockData: Product[] = [
-    {
-      name: "Apple Watch Series 9 GPS 45mm Midnight Aluminum Case with Sport Band",
-      price: "$399.00",
-      rating: 4.5,
-      reviews: 12847,
-      badge: "Amazon's Choice",
-      link: "https://amazon.com/dp/B0CHXJX9YZ",
-      winningScore: 95.8,
-      image: "/placeholder.svg"
-    },
-    {
-      name: "Samsung Galaxy Watch 6 Classic 47mm Bluetooth Smartwatch",
-      price: "$329.99",
-      rating: 4.3,
-      reviews: 8932,
-      badge: "Best Seller",
-      link: "https://amazon.com/dp/B0C7B7QQP2",
-      winningScore: 87.3,
-      image: "/placeholder.svg"
-    },
-    {
-      name: "Fitbit Sense 2 Health & Fitness Smartwatch with Tools",
-      price: "$249.95",
-      rating: 4.1,
-      reviews: 5621,
-      badge: "Editor's Choice",
-      link: "https://amazon.com/dp/B0B4N5HWQX",
-      winningScore: 78.9,
-      image: "/placeholder.svg"
-    },
-    {
-      name: "Garmin Venu 3 GPS Smartwatch with Bright Display",
-      price: "$449.99",
-      rating: 4.6,
-      reviews: 3847,
-      badge: "Premium Choice",
-      link: "https://amazon.com/dp/B0C6GB21YJ",
-      winningScore: 82.4,
-      image: "/placeholder.svg"
-    },
-    // Ajout de plus de produits pour la pagination
-    ...Array.from({ length: 20 }, (_, i) => ({
-      name: `Smart Watch Model ${i + 5} - Advanced Features`,
-      price: `$${(199 + i * 20).toFixed(2)}`,
-      rating: 3.8 + (Math.random() * 1.2),
-      reviews: Math.floor(Math.random() * 10000) + 1000,
-      badge: i % 3 === 0 ? "Popular" : i % 4 === 0 ? "New Release" : "",
-      link: `https://amazon.com/dp/B0${String.fromCharCode(65 + i)}${String.fromCharCode(65 + (i + 1) % 26)}`,
-      winningScore: 60 + Math.random() * 30,
-      image: "/placeholder.svg"
-    }))
-  ];
+  // Generate realistic mock data that matches your scraping results (51+ products)
+  const generateMockData = (): Product[] => {
+    const baseProducts = [
+      {
+        name: "AT&T CD4930 Corded Phone with Digital Answering System and Caller ID, Extra-Large Tilt Display & Buttons, Black",
+        price: "$49.95",
+        rating: 4.4,
+        reviews: 13973,
+        badge: "Amazon's Choice",
+        link: "https://amazon.com/dp/B0CHXJX9YZ",
+        winningScore: 79.33,
+        image: "/placeholder.svg"
+      },
+      {
+        name: "Panasonic Cordless Phone with Answering Machine, Advanced Call Block, Bilingual Caller ID and Easy to Read High-Contrast Display",
+        price: "$59.99",
+        rating: 4.3,
+        reviews: 6066,
+        badge: "Best Seller",
+        link: "https://amazon.com/dp/B0C7B7QQP2",
+        winningScore: 78.67,
+        image: "/placeholder.svg"
+      },
+      {
+        name: "VTech CS6719-2 2-Handset Cordless Phone with Caller ID/Call Waiting, Handset Intercom & Backlit Display/Keypad, Silver",
+        price: "$37.99",
+        rating: 4.3,
+        reviews: 65521,
+        badge: "Popular Choice",
+        link: "https://amazon.com/dp/B0B4N5HWQX",
+        winningScore: 78.67,
+        image: "/placeholder.svg"
+      },
+      {
+        name: "VTech VG131-11 DECT 6.0 Cordless Phone - Bluetooth Connection, Blue-White Display, Big Buttons, Full Duplex",
+        price: "$19.95",
+        rating: 4.3,
+        reviews: 1497,
+        badge: "Editor's Choice",
+        link: "https://amazon.com/dp/B0C6GB21YJ",
+        winningScore: 78.67,
+        image: "/placeholder.svg"
+      },
+      {
+        name: "AT&T GL2101-2 DECT 6.0 2-Handset Cordless Home Phone with Call Block, Caller ID, Full-Duplex Handset Speakerphone",
+        price: "$39.95",
+        rating: 4.3,
+        reviews: 2340,
+        badge: "Amazon's Choice",
+        link: "https://amazon.com/dp/B0C6GB21YJ",
+        winningScore: 78.67,
+        image: "/placeholder.svg"
+      }
+    ];
+
+    // Generate additional products to reach 51+ items like your real scraping results
+    const additionalProducts = Array.from({ length: 46 }, (_, i) => {
+      const productTypes = [
+        "Smart Phone", "Cordless Phone", "Cell Phone", "Android Phone", "iPhone", 
+        "Samsung Galaxy", "Motorola", "Google Pixel", "OnePlus", "Xiaomi",
+        "Huawei", "LG Phone", "Sony Xperia", "Nokia", "BlackBerry"
+      ];
+      
+      const brands = ["AT&T", "Vtech", "Panasonic", "Samsung", "Apple", "Google", "Motorola", "Sony", "LG", "Nokia"];
+      const features = ["with Call Block", "Cordless", "5G Ready", "Unlocked", "Dual SIM", "Fast Charging", "Wireless Charging", "Water Resistant"];
+      const colors = ["Black", "White", "Silver", "Blue", "Red", "Gold", "Pink", "Green"];
+      
+      const brand = brands[i % brands.length];
+      const productType = productTypes[i % productTypes.length];
+      const feature = features[i % features.length];
+      const color = colors[i % colors.length];
+      
+      return {
+        name: `${brand} ${productType} ${feature} - ${color} Model ${(i + 6).toString().padStart(3, '0')}`,
+        price: `$${(29.99 + (i * 15.5)).toFixed(2)}`,
+        rating: parseFloat((3.5 + Math.random() * 1.5).toFixed(1)),
+        reviews: Math.floor(Math.random() * 50000) + 500,
+        badge: i % 4 === 0 ? "Amazon's Choice" : i % 5 === 0 ? "Best Seller" : i % 6 === 0 ? "Popular" : "",
+        link: `https://amazon.com/dp/B0${String.fromCharCode(65 + (i % 26))}${String.fromCharCode(65 + ((i + 1) % 26))}${String.fromCharCode(65 + ((i + 2) % 26))}`,
+        winningScore: parseFloat((55 + Math.random() * 40).toFixed(2)),
+        image: "/placeholder.svg"
+      };
+    });
+
+    return [...baseProducts, ...additionalProducts].sort((a, b) => b.winningScore - a.winningScore);
+  };
 
   // Pagination calculations
   const totalPages = Math.ceil(products.length / itemsPerPage);
@@ -112,14 +143,16 @@ const Index = () => {
     setCurrentPage(1);
     
     setTimeout(() => {
-      const filteredProducts = mockData.sort((a, b) => b.winningScore - a.winningScore);
-      setProducts(filteredProducts);
-      setTopProduct(filteredProducts[0]);
+      const allProducts = generateMockData();
+      console.log(`Generated ${allProducts.length} products for keyword: ${keyword}`);
+      
+      setProducts(allProducts);
+      setTopProduct(allProducts[0]);
       setIsLoading(false);
       
       toast({
         title: "🎉 Recherche terminée !",
-        description: `${filteredProducts.length} produits trouvés pour "${keyword}"`,
+        description: `${allProducts.length} produits trouvés pour "${keyword}"`,
       });
     }, 2000);
   };
