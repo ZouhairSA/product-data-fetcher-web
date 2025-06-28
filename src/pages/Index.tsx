@@ -42,6 +42,7 @@ const Index = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [detectedLanguage, setDetectedLanguage] = useState<string>('');
+  const [source, setSource] = useState<'amazon' | 'ebay'>('amazon');
   const itemsPerPage = 12;
 
   // Calculate winning score based on your Python algorithm
@@ -118,7 +119,7 @@ const Index = () => {
       const color = colors[i % colors.length];
       
       return {
-        sku: `SKU-${String.fromCharCode(65 + (i % 26))}${String.fromCharCode(65 + ((i + 1) % 26))}${(i + 10).toString().padStart(6, '0')}`,
+        sku: `SKU-${String.fromCharCode(65 + (i % 26))}${String.fromCharCode(65 + ((i + 1) % 26))}${String.fromCharCode(65 + ((i + 2) % 26))}`,
         name: `${brand} ${productType} ${feature} - ${color} Model ${(i + 6).toString().padStart(3, '0')}`,
         price: parseFloat((29.99 + (i * 15.5)).toFixed(2)),
         rating: parseFloat((3.5 + Math.random() * 1.5).toFixed(1)),
@@ -164,7 +165,6 @@ const Index = () => {
   }, [products, currentPage, itemsPerPage]);
 
   const handleSearch = async () => {
-    console.log("VITE_API_URL =", import.meta.env.VITE_API_URL);
     if (!keyword.trim()) {
       toast({
         title: "⚠️ Champ requis",
@@ -176,21 +176,19 @@ const Index = () => {
 
     setIsLoading(true);
     setCurrentPage(1);
-    
+
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
       if (!apiUrl) {
         throw new Error("URL API non configurée");
       }
-
-      const response = await fetch(`${apiUrl}/scrape`, {
+      const endpoint = source === 'amazon' ? '/scrape_amazon' : '/scrape_ebay';
+      const response = await fetch(`${apiUrl}${endpoint}`, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json" 
-        },
-        body: JSON.stringify({ 
-          search_query: keyword, 
-          num_products: 50 
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          search_query: keyword,
+          num_products: 50
         })
       });
 
@@ -199,47 +197,58 @@ const Index = () => {
       }
 
       const data = await response.json();
-      
+
       if (!data.success) {
         throw new Error(data.error || "Erreur lors du scraping");
       }
 
-      // Mettre à jour les produits avec les vraies données du backend
-      setProducts(data.products || []);
-      setTopProduct(data.top_product || null);
-      
-      // Mettre à jour les statistiques avec les vraies données
+      // Vérification et fallback si la réponse est vide ou mal formée
+      const products = Array.isArray(data.products) ? data.products : [];
+      setProducts(products);
+      setTopProduct(data.top_product || (products.length > 0 ? products[0] : null));
+
       if (data.stats) {
         setStats({
           avgPrice: data.stats.avg_price || 0,
           avgRating: data.stats.avg_rating || 0,
           totalReviews: data.stats.total_reviews || 0,
-          totalProducts: data.stats.total_products || 0
+          totalProducts: data.stats.total_products || products.length
+        });
+      } else {
+        // Calcul fallback si stats absent
+        setStats({
+          avgPrice: products.length ? products.reduce((sum, p) => sum + (p.price || 0), 0) / products.length : 0,
+          avgRating: products.length ? products.reduce((sum, p) => sum + (p.rating || 0), 0) / products.length : 0,
+          totalReviews: products.length ? products.reduce((sum, p) => sum + (p.reviews || 0), 0) : 0,
+          totalProducts: products.length
         });
       }
-      
+
       // Détecter la langue pour l'affichage
       const lang = detectLanguage(keyword);
       setDetectedLanguage(lang === 'ar' ? 'Arabe' : lang === 'fr' ? 'Français' : 'Anglais');
-      
+
       setIsLoading(false);
-      
+
       toast({
         title: "🤖 Analyse IA Terminée !",
-        description: `${data.products?.length || 0} produits analysés par SynchroScale AI`,
+        description: `${products.length} produits analysés par SynchroScale AI`,
       });
-      
-      console.log(`SynchroScale AI analysé ${data.products?.length || 0} produits pour: ${keyword}`);
-      
+
+      console.log(`SynchroScale AI analysé ${products.length} produits pour: ${keyword}`);
+
     } catch (error) {
-      console.error("Erreur lors de l'appel API:", error);
+      setProducts([]);
+      setTopProduct(null);
+      setStats(null);
       setIsLoading(false);
-      
+
       toast({
         title: "❌ Erreur API",
         description: error instanceof Error ? error.message : "Impossible de récupérer les données du backend.",
         variant: "destructive"
       });
+      console.error("Erreur lors de l'appel API:", error);
     }
   };
 
@@ -376,23 +385,33 @@ const Index = () => {
                   className="pl-12 h-14 text-lg border-0 focus:ring-0 bg-transparent placeholder:text-gray-400"
                 />
               </div>
-              <Button
-                onClick={handleSearch}
-                disabled={isLoading}
-                className="h-14 px-10 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                {isLoading ? (
-                  <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3" />
-                    Analyse IA...
-                  </div>
-                ) : (
-                  <>
-                    <Bot className="w-6 h-6 mr-3" />
-                    Analyser
-                  </>
-                )}
-              </Button>
+              <div className="flex gap-2">
+                <select
+                  value={source}
+                  onChange={e => setSource(e.target.value as 'amazon' | 'ebay')}
+                  className="h-14 px-4 rounded-xl border border-gray-300 text-lg"
+                >
+                  <option value="amazon">Amazon</option>
+                  <option value="ebay">eBay</option>
+                </select>
+                <Button
+                  onClick={handleSearch}
+                  disabled={isLoading}
+                  className="h-14 px-10 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3" />
+                      Analyse IA...
+                    </div>
+                  ) : (
+                    <>
+                      <Bot className="w-6 h-6 mr-3" />
+                      Analyser
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -403,6 +422,25 @@ const Index = () => {
                 <Globe className="w-4 h-4 mr-2" />
                 Langue détectée: {detectedLanguage}
               </Badge>
+            </div>
+          )}
+
+          {/* Loading State */}
+          {isLoading && (
+            <div className="mt-8 text-center">
+              <div className="max-w-md mx-auto bg-white rounded-2xl p-8 shadow-xl border border-gray-200">
+                <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-teal-600 mx-auto mb-6"></div>
+                <h3 className="text-xl font-bold text-gray-800 mb-4">
+                  🤖 SynchroScale IA en cours d'analyse...
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Analyse de <strong>{keyword}</strong> en cours
+                </p>
+                <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                  <Bot className="w-4 h-4" />
+                  <span>Détection de langue • Scraping Amazon • Calcul des scores</span>
+                </div>
+              </div>
             </div>
           )}
         </div>

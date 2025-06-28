@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 import requests
@@ -8,8 +9,18 @@ from urllib.parse import quote
 import uuid
 import time
 from langdetect import detect, LangDetectException
+import os
 
 app = FastAPI()
+
+# CORS pour Railway/Vercel
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Pour la prod, restreindre à ton domaine Vercel
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class ScrapeRequest(BaseModel):
     search_query: str
@@ -92,14 +103,14 @@ def scrape_products(search_query, num_products=50, delay=2):
                     sku = f"SKU-{str(uuid.uuid4())[:8]}"
 
                     product = {
-                        'SKU': sku,
-                        'Nom': name,
-                        'Prix': price_float,
-                        'Lien': link,
-                        'Rating': rating_float,
-                        'Review_Count': review_count,
-                        'Badge': badge,
-                        'Winning_Score': score
+                        'sku': sku,
+                        'name': name,
+                        'price': price_float,
+                        'link': link,
+                        'rating': rating_float,
+                        'reviews': review_count,
+                        'badge': badge,
+                        'winningScore': score
                     }
 
                     products.append(product)
@@ -119,26 +130,39 @@ def scrape_products(search_query, num_products=50, delay=2):
         except requests.RequestException:
             break
 
-    products = sorted(products, key=lambda x: x['Winning_Score'], reverse=True)
+    products = sorted(products, key=lambda x: x['winningScore'], reverse=True)
 
-    # Statistiques dynamiques
-    prices = [p['Prix'] for p in products]
-    ratings = [p['Rating'] for p in products if p['Rating'] > 0]
-    reviews = [p['Review_Count'] for p in products]
+    prices = [p['price'] for p in products]
+    ratings = [p['rating'] for p in products if p['rating'] > 0]
+    reviews = [p['reviews'] for p in products]
 
     stats = {
-        "total_products": len(products),
-        "avg_price": round(sum(prices)/len(prices), 2) if prices else 0,
-        "avg_rating": round(sum(ratings)/len(ratings), 2) if ratings else 0,
+        "avg_price": sum(prices) / len(prices) if prices else 0,
+        "avg_rating": sum(ratings) / len(ratings) if ratings else 0,
         "total_reviews": sum(reviews),
+        "total_products": len(products)
     }
 
     return {
         "products": products,
+        "top_product": products[0] if products else None,
         "stats": stats,
-        "success": len(products) > 0
+        "success": True
     }
 
 @app.post("/scrape")
 def scrape_endpoint(req: ScrapeRequest):
-    return scrape_products(req.search_query, req.num_products, req.delay) 
+    try:
+        result = scrape_products(req.search_query, req.num_products, req.delay)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port) 
