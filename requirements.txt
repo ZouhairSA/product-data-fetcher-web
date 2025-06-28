@@ -1,0 +1,13 @@
+# Dépendances pour le scraping Amazon
+beautifulsoup4==4.12.2
+requests==2.31.0
+langdetect==1.0.9
+
+# Pour l'intégration FastAPI (optionnel)
+fastapi==0.104.1
+uvicorn==0.24.0
+pydantic==2.5.0
+
+# Dépendances optionnelles pour améliorations
+lxml==4.9.3
+html5lib==1.1 
