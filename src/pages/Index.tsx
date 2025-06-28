@@ -1,11 +1,20 @@
 
-import React, { useState } from 'react';
-import { Search, Download, Star, Award, ExternalLink, TrendingUp, Package } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Search, Download, Star, Award, ExternalLink, TrendingUp, Package, Filter, Grid, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
+import { 
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 
 interface Product {
   name: string;
@@ -15,6 +24,7 @@ interface Product {
   badge: string;
   link: string;
   winningScore: number;
+  image?: string;
 }
 
 const Index = () => {
@@ -22,60 +32,85 @@ const Index = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [topProduct, setTopProduct] = useState<Product | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const itemsPerPage = 12;
 
-  // Simulation des données pour la démonstration
+  // Simulation des données pour la démonstration avec plus de produits
   const mockData: Product[] = [
     {
-      name: "Apple Watch Series 9 GPS 45mm Midnight Aluminum Case",
+      name: "Apple Watch Series 9 GPS 45mm Midnight Aluminum Case with Sport Band",
       price: "$399.00",
       rating: 4.5,
       reviews: 12847,
       badge: "Amazon's Choice",
-      link: "https://amazon.com/product1",
-      winningScore: 95.8
+      link: "https://amazon.com/dp/B0CHXJX9YZ",
+      winningScore: 95.8,
+      image: "/placeholder.svg"
     },
     {
-      name: "Samsung Galaxy Watch 6 Classic 47mm",
+      name: "Samsung Galaxy Watch 6 Classic 47mm Bluetooth Smartwatch",
       price: "$329.99",
       rating: 4.3,
       reviews: 8932,
       badge: "Best Seller",
-      link: "https://amazon.com/product2",
-      winningScore: 87.3
+      link: "https://amazon.com/dp/B0C7B7QQP2",
+      winningScore: 87.3,
+      image: "/placeholder.svg"
     },
     {
-      name: "Fitbit Sense 2 Health & Fitness Smartwatch",
+      name: "Fitbit Sense 2 Health & Fitness Smartwatch with Tools",
       price: "$249.95",
       rating: 4.1,
       reviews: 5621,
-      badge: "",
-      link: "https://amazon.com/product3",
-      winningScore: 78.9
+      badge: "Editor's Choice",
+      link: "https://amazon.com/dp/B0B4N5HWQX",
+      winningScore: 78.9,
+      image: "/placeholder.svg"
     },
     {
-      name: "Garmin Venu 3 GPS Smartwatch",
+      name: "Garmin Venu 3 GPS Smartwatch with Bright Display",
       price: "$449.99",
       rating: 4.6,
       reviews: 3847,
-      badge: "Editor's Choice",
-      link: "https://amazon.com/product4",
-      winningScore: 82.4
-    }
+      badge: "Premium Choice",
+      link: "https://amazon.com/dp/B0C6GB21YJ",
+      winningScore: 82.4,
+      image: "/placeholder.svg"
+    },
+    // Ajout de plus de produits pour la pagination
+    ...Array.from({ length: 20 }, (_, i) => ({
+      name: `Smart Watch Model ${i + 5} - Advanced Features`,
+      price: `$${(199 + i * 20).toFixed(2)}`,
+      rating: 3.8 + (Math.random() * 1.2),
+      reviews: Math.floor(Math.random() * 10000) + 1000,
+      badge: i % 3 === 0 ? "Popular" : i % 4 === 0 ? "New Release" : "",
+      link: `https://amazon.com/dp/B0${String.fromCharCode(65 + i)}${String.fromCharCode(65 + (i + 1) % 26)}`,
+      winningScore: 60 + Math.random() * 30,
+      image: "/placeholder.svg"
+    }))
   ];
+
+  // Pagination calculations
+  const totalPages = Math.ceil(products.length / itemsPerPage);
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return products.slice(startIndex, startIndex + itemsPerPage);
+  }, [products, currentPage, itemsPerPage]);
 
   const handleSearch = async () => {
     if (!keyword.trim()) {
       toast({
-        title: "Erreur",
-        description: "Veuillez saisir un mot-clé pour la recherche",
+        title: "⚠️ Champ requis",
+        description: "Veuillez saisir un mot-clé pour commencer la recherche",
         variant: "destructive"
       });
       return;
     }
 
     setIsLoading(true);
+    setCurrentPage(1);
     
-    // Simulation d'un appel API
     setTimeout(() => {
       const filteredProducts = mockData.sort((a, b) => b.winningScore - a.winningScore);
       setProducts(filteredProducts);
@@ -83,7 +118,7 @@ const Index = () => {
       setIsLoading(false);
       
       toast({
-        title: "Recherche terminée",
+        title: "🎉 Recherche terminée !",
         description: `${filteredProducts.length} produits trouvés pour "${keyword}"`,
       });
     }, 2000);
@@ -92,14 +127,13 @@ const Index = () => {
   const handleDownloadCSV = () => {
     if (products.length === 0) {
       toast({
-        title: "Aucune donnée",
+        title: "📋 Aucune donnée",
         description: "Effectuez d'abord une recherche pour télécharger les résultats",
         variant: "destructive"
       });
       return;
     }
 
-    // Simulation du téléchargement CSV
     const csvContent = [
       ['Nom', 'Prix', 'Note', 'Avis', 'Badge', 'Score', 'Lien'],
       ...products.map(p => [p.name, p.price, p.rating, p.reviews, p.badge, p.winningScore, p.link])
@@ -114,123 +148,152 @@ const Index = () => {
     window.URL.revokeObjectURL(url);
 
     toast({
-      title: "Téléchargement réussi",
-      description: "Le fichier CSV a été téléchargé",
+      title: "✅ Téléchargement réussi",
+      description: "Le fichier CSV a été téléchargé avec succès",
+    });
+  };
+
+  const handleProductClick = (productLink: string) => {
+    window.open(productLink, '_blank', 'noopener,noreferrer');
+    toast({
+      title: "🔗 Redirection",
+      description: "Ouverture du produit sur Amazon...",
     });
   };
 
   const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Star
-        key={i}
-        className={`w-4 h-4 ${
-          i < Math.floor(rating) 
-            ? 'text-yellow-400 fill-yellow-400' 
-            : i < rating 
-            ? 'text-yellow-400 fill-yellow-400/50' 
-            : 'text-gray-300'
-        }`}
-      />
-    ));
+    return (
+      <div className="flex items-center gap-1">
+        {Array.from({ length: 5 }, (_, i) => (
+          <Star
+            key={i}
+            className={`w-4 h-4 ${
+              i < Math.floor(rating) 
+                ? 'text-amber-400 fill-amber-400' 
+                : i < rating 
+                ? 'text-amber-400 fill-amber-400/50' 
+                : 'text-gray-300'
+            }`}
+          />
+        ))}
+        <span className="text-sm font-medium text-gray-700 ml-1">
+          {rating.toFixed(1)}
+        </span>
+      </div>
+    );
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      {/* Enhanced Header */}
+      <div className="bg-white/90 backdrop-blur-md border-b border-gray-200/50 sticky top-0 z-50 shadow-sm">
+        <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-center">
-            <Package className="w-8 h-8 text-blue-600 mr-3" />
-            <h1 className="text-2xl font-bold text-gray-800">Amazon Product Scraper</h1>
+            <div className="flex items-center bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              <Package className="w-10 h-10 text-blue-600 mr-3 drop-shadow-sm" />
+              <h1 className="text-3xl font-bold">Amazon Product Scraper Pro</h1>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Search Section */}
-        <div className="max-w-2xl mx-auto mb-12">
-          <div className="text-center mb-8">
-            <h2 className="text-4xl font-bold text-gray-800 mb-4">
-              Recherchez des produits Amazon
+      <div className="container mx-auto px-4 py-12">
+        {/* Enhanced Search Section */}
+        <div className="max-w-4xl mx-auto mb-16">
+          <div className="text-center mb-12">
+            <h2 className="text-5xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-6">
+              Découvrez les Meilleurs Produits
             </h2>
-            <p className="text-lg text-gray-600">
-              Entrez un mot-clé en français, anglais ou arabe pour analyser les meilleurs produits
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+              Analysez instantanément les produits Amazon avec notre IA. 
+              Recherchez en français, anglais ou arabe pour des résultats précis.
             </p>
           </div>
 
-          <div className="flex gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <Input
-                placeholder="Ex: smart watch, هاتف, coque iPhone..."
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="pl-10 h-12 text-lg border-2 border-blue-200 focus:border-blue-500 rounded-xl"
-              />
+          <div className="relative">
+            <div className="flex gap-4 bg-white rounded-2xl p-2 shadow-xl border border-gray-200/50">
+              <div className="flex-1 relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-6 h-6" />
+                <Input
+                  placeholder="Ex: smart watch, هاتف ذكي, coque iPhone..."
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  className="pl-12 h-14 text-lg border-0 focus:ring-0 bg-transparent placeholder:text-gray-400"
+                />
+              </div>
+              <Button
+                onClick={handleSearch}
+                disabled={isLoading}
+                className="h-14 px-10 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                {isLoading ? (
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
+                ) : (
+                  <>
+                    <Search className="w-6 h-6 mr-3" />
+                    Analyser
+                  </>
+                )}
+              </Button>
             </div>
-            <Button
-              onClick={handleSearch}
-              disabled={isLoading}
-              className="h-12 px-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl font-semibold"
-            >
-              {isLoading ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-              ) : (
-                <>
-                  <Search className="w-5 h-5 mr-2" />
-                  Rechercher
-                </>
-              )}
-            </Button>
           </div>
         </div>
 
-        {/* Top Product Winner */}
+        {/* Enhanced Top Product Winner */}
         {topProduct && (
-          <div className="max-w-4xl mx-auto mb-8">
-            <Card className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 shadow-lg">
-              <CardHeader className="pb-4">
+          <div className="max-w-6xl mx-auto mb-12">
+            <Card className="bg-gradient-to-r from-amber-50 via-orange-50 to-red-50 border-2 border-amber-300/50 shadow-2xl hover:shadow-3xl transition-all duration-300">
+              <CardHeader className="pb-6">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center text-xl text-amber-800">
-                    <Award className="w-6 h-6 mr-2 text-amber-600" />
+                  <CardTitle className="flex items-center text-2xl text-amber-800">
+                    <Award className="w-8 h-8 mr-3 text-amber-600" />
                     🏆 Produit Gagnant
                   </CardTitle>
-                  <div className="flex items-center bg-amber-100 px-3 py-1 rounded-full">
-                    <TrendingUp className="w-4 h-4 mr-1 text-amber-600" />
-                    <span className="font-bold text-amber-800">Score: {topProduct.winningScore}</span>
+                  <div className="flex items-center bg-gradient-to-r from-amber-200 to-orange-200 px-4 py-2 rounded-full shadow-sm">
+                    <TrendingUp className="w-5 h-5 mr-2 text-amber-700" />
+                    <span className="font-bold text-amber-800 text-lg">
+                      Score: {topProduct.winningScore.toFixed(1)}
+                    </span>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="font-semibold text-lg text-gray-800 mb-3 line-clamp-2">
+                <div className="grid lg:grid-cols-3 gap-8">
+                  <div className="lg:col-span-2">
+                    <h3 className="font-bold text-xl text-gray-800 mb-4 line-clamp-2 leading-relaxed">
                       {topProduct.name}
                     </h3>
-                    <div className="space-y-2">
-                      <div className="flex items-center">
-                        <span className="text-2xl font-bold text-green-600">{topProduct.price}</span>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-4">
+                        <span className="text-3xl font-bold text-green-600">
+                          {topProduct.price}
+                        </span>
+                        {topProduct.badge && (
+                          <Badge className="bg-blue-600 text-white px-3 py-1 text-sm">
+                            {topProduct.badge}
+                          </Badge>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex">{renderStars(topProduct.rating)}</div>
-                        <span className="text-sm text-gray-600">
-                          {topProduct.rating} ({topProduct.reviews.toLocaleString()} avis)
+                      <div className="flex items-center gap-4">
+                        {renderStars(topProduct.rating)}
+                        <span className="text-gray-600 font-medium">
+                          ({topProduct.reviews.toLocaleString()} avis)
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex flex-col justify-between">
-                    {topProduct.badge && (
-                      <Badge variant="secondary" className="w-fit mb-3 bg-blue-100 text-blue-800">
-                        {topProduct.badge}
-                      </Badge>
-                    )}
+                  <div className="flex flex-col justify-center">
                     <Button
-                      onClick={() => window.open(topProduct.link, '_blank')}
-                      className="w-fit bg-orange-500 hover:bg-orange-600"
+                      onClick={() => handleProductClick(topProduct.link)}
+                      className="w-full h-14 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                     >
-                      <ExternalLink className="w-4 h-4 mr-2" />
+                      <ExternalLink className="w-6 h-6 mr-3" />
                       Voir sur Amazon
                     </Button>
                   </div>
@@ -240,114 +303,260 @@ const Index = () => {
           </div>
         )}
 
-        {/* Results Section */}
+        {/* Enhanced Results Section */}
         {products.length > 0 && (
-          <div className="max-w-6xl mx-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-gray-800">
-                Résultats de la recherche ({products.length} produits)
-              </h3>
-              <Button
-                onClick={handleDownloadCSV}
-                variant="outline"
-                className="border-green-500 text-green-600 hover:bg-green-50"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Télécharger CSV
-              </Button>
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
+              <div>
+                <h3 className="text-3xl font-bold text-gray-800 mb-2">
+                  Résultats de la recherche
+                </h3>
+                <p className="text-gray-600">
+                  {products.length} produits trouvés • Page {currentPage} sur {totalPages}
+                </p>
+              </div>
+              
+              <div className="flex items-center gap-4">
+                <div className="flex items-center bg-white rounded-lg p-1 shadow-sm border">
+                  <Button
+                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('grid')}
+                    className="rounded-md"
+                  >
+                    <Grid className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'list' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('list')}
+                    className="rounded-md"
+                  >
+                    <List className="w-4 h-4" />
+                  </Button>
+                </div>
+                
+                <Button
+                  onClick={handleDownloadCSV}
+                  variant="outline"
+                  className="border-green-500 text-green-600 hover:bg-green-50 px-6 py-2 font-semibold"
+                >
+                  <Download className="w-5 h-5 mr-2" />
+                  Télécharger CSV
+                </Button>
+              </div>
             </div>
 
-            <Card className="shadow-lg">
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 border-b">
-                      <tr>
-                        <th className="text-left p-4 font-semibold text-gray-700">Produit</th>
-                        <th className="text-left p-4 font-semibold text-gray-700">Prix</th>
-                        <th className="text-left p-4 font-semibold text-gray-700">Note</th>
-                        <th className="text-left p-4 font-semibold text-gray-700">Avis</th>
-                        <th className="text-left p-4 font-semibold text-gray-700">Badge</th>
-                        <th className="text-left p-4 font-semibold text-gray-700">Score</th>
-                        <th className="text-left p-4 font-semibold text-gray-700">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {products.map((product, index) => (
-                        <tr key={index} className="border-b hover:bg-gray-50 transition-colors">
-                          <td className="p-4">
-                            <div className="max-w-md">
-                              <p className="font-medium text-gray-800 line-clamp-2">
-                                {product.name}
-                              </p>
+            {/* Grid View */}
+            {viewMode === 'grid' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+                {paginatedProducts.map((product, index) => (
+                  <Card 
+                    key={index} 
+                    className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 shadow-md hover:-translate-y-1"
+                    onClick={() => handleProductClick(product.link)}
+                  >
+                    <CardContent className="p-6">
+                      <div className="aspect-square bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
+                        <Package className="w-12 h-12 text-gray-400" />
+                      </div>
+                      
+                      <h4 className="font-semibold text-gray-800 mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                        {product.name}
+                      </h4>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xl font-bold text-green-600">
+                            {product.price}
+                          </span>
+                          {product.badge && (
+                            <Badge variant="secondary" className="text-xs">
+                              {product.badge}
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        {renderStars(product.rating)}
+                        
+                        <div className="flex items-center justify-between text-sm text-gray-600">
+                          <span>{product.reviews.toLocaleString()} avis</span>
+                          <div className="flex items-center">
+                            <div className="w-12 h-2 bg-gray-200 rounded-full mr-2">
+                              <div
+                                className="h-2 bg-gradient-to-r from-green-400 to-blue-500 rounded-full"
+                                style={{ width: `${Math.min(product.winningScore, 100)}%` }}
+                              />
                             </div>
-                          </td>
-                          <td className="p-4">
-                            <span className="font-semibold text-green-600 text-lg">
-                              {product.price}
+                            <span className="font-semibold">
+                              {product.winningScore.toFixed(0)}
                             </span>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex items-center gap-2">
-                              <div className="flex">{renderStars(product.rating)}</div>
-                              <span className="text-sm text-gray-600">{product.rating}</span>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <span className="text-gray-600">
-                              {product.reviews.toLocaleString()}
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            {product.badge && (
-                              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                                {product.badge}
-                              </Badge>
-                            )}
-                          </td>
-                          <td className="p-4">
-                            <div className="flex items-center">
-                              <div className="w-12 h-2 bg-gray-200 rounded-full mr-2">
-                                <div
-                                  className="h-2 bg-gradient-to-r from-green-400 to-blue-500 rounded-full"
-                                  style={{ width: `${product.winningScore}%` }}
-                                />
-                              </div>
-                              <span className="font-semibold text-sm">
-                                {product.winningScore}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <Button
-                              onClick={() => window.open(product.link, '_blank')}
-                              size="sm"
-                              variant="outline"
-                              className="border-orange-500 text-orange-600 hover:bg-orange-50"
-                            >
-                              <ExternalLink className="w-4 h-4" />
-                            </Button>
-                          </td>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {/* List View */}
+            {viewMode === 'list' && (
+              <Card className="shadow-lg mb-8">
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
+                        <tr>
+                          <th className="text-left p-6 font-semibold text-gray-700">Produit</th>
+                          <th className="text-left p-6 font-semibold text-gray-700">Prix</th>
+                          <th className="text-left p-6 font-semibold text-gray-700">Note</th>
+                          <th className="text-left p-6 font-semibold text-gray-700">Avis</th>
+                          <th className="text-left p-6 font-semibold text-gray-700">Badge</th>
+                          <th className="text-left p-6 font-semibold text-gray-700">Score</th>
+                          <th className="text-left p-6 font-semibold text-gray-700">Action</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
+                      </thead>
+                      <tbody>
+                        {paginatedProducts.map((product, index) => (
+                          <tr 
+                            key={index} 
+                            className="border-b hover:bg-blue-50/50 transition-colors cursor-pointer"
+                            onClick={() => handleProductClick(product.link)}
+                          >
+                            <td className="p-6">
+                              <div className="max-w-md">
+                                <p className="font-medium text-gray-800 line-clamp-2 hover:text-blue-600 transition-colors">
+                                  {product.name}
+                                </p>
+                              </div>
+                            </td>
+                            <td className="p-6">
+                              <span className="font-bold text-green-600 text-lg">
+                                {product.price}
+                              </span>
+                            </td>
+                            <td className="p-6">
+                              <div className="flex items-center gap-3">
+                                {renderStars(product.rating)}
+                              </div>
+                            </td>
+                            <td className="p-6">
+                              <span className="text-gray-600 font-medium">
+                                {product.reviews.toLocaleString()}
+                              </span>
+                            </td>
+                            <td className="p-6">
+                              {product.badge && (
+                                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                                  {product.badge}
+                                </Badge>
+                              )}
+                            </td>
+                            <td className="p-6">
+                              <div className="flex items-center">
+                                <div className="w-16 h-3 bg-gray-200 rounded-full mr-3">
+                                  <div
+                                    className="h-3 bg-gradient-to-r from-green-400 to-blue-500 rounded-full"
+                                    style={{ width: `${Math.min(product.winningScore, 100)}%` }}
+                                  />
+                                </div>
+                                <span className="font-bold text-sm">
+                                  {product.winningScore.toFixed(1)}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="p-6">
+                              <Button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleProductClick(product.link);
+                                }}
+                                size="sm"
+                                className="bg-orange-500 hover:bg-orange-600 text-white"
+                              >
+                                <ExternalLink className="w-4 h-4 mr-2" />
+                                Voir
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Enhanced Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center mt-12">
+                <Pagination>
+                  <PaginationContent className="gap-2">
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+                        className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer hover:bg-blue-50'}
+                      />
+                    </PaginationItem>
+                    
+                    {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      
+                      return (
+                        <PaginationItem key={pageNum}>
+                          <PaginationLink
+                            onClick={() => handlePageChange(pageNum)}
+                            isActive={currentPage === pageNum}
+                            className="cursor-pointer hover:bg-blue-50"
+                          >
+                            {pageNum}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    })}
+                    
+                    {totalPages > 5 && currentPage < totalPages - 2 && (
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )}
+                    
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+                        className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer hover:bg-blue-50'}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
           </div>
         )}
 
-        {/* No Results State */}
+        {/* Enhanced No Results State */}
         {!isLoading && products.length === 0 && keyword && (
-          <div className="text-center py-12">
-            <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">
-              Aucun produit trouvé
-            </h3>
-            <p className="text-gray-500">
-              Essayez avec un autre mot-clé ou vérifiez l'orthographe
-            </p>
+          <div className="text-center py-20">
+            <div className="max-w-md mx-auto">
+              <Package className="w-24 h-24 text-gray-300 mx-auto mb-6" />
+              <h3 className="text-2xl font-bold text-gray-600 mb-4">
+                Aucun produit trouvé
+              </h3>
+              <p className="text-gray-500 text-lg leading-relaxed">
+                Essayez avec un autre mot-clé ou vérifiez l'orthographe. 
+                Notre IA analyse des milliers de produits pour vous.
+              </p>
+            </div>
           </div>
         )}
       </div>
