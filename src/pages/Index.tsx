@@ -202,6 +202,14 @@ const Index = () => {
         throw new Error(data.error || "Erreur lors du scraping");
       }
 
+      if (data.products && data.products.length === 0 && source === 'amazon') {
+        toast({
+          title: "⚠️ Amazon bloque l'accès",
+          description: "Amazon bloque parfois l'accès aux résultats depuis le serveur. Essayez eBay pour des résultats immédiats.",
+          variant: "destructive"
+        });
+      }
+
       setProducts(data.products || []);
       setTopProduct(data.top_product || null);
       setStats(data.stats || { total_products: (data.products || []).length });
