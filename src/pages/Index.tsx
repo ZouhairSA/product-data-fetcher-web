@@ -174,6 +174,11 @@ const Index = () => {
       return;
     }
 
+    // Efface les anciens résultats avant de lancer la nouvelle recherche
+    setProducts([]);
+    setTopProduct(null);
+    setStats(null);
+
     setIsLoading(true);
     setCurrentPage(1);
 
