@@ -42,7 +42,7 @@ const Index = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [detectedLanguage, setDetectedLanguage] = useState<string>('');
-  const [source, setSource] = useState<'ebay' | 'fnac' | 'cdiscount'>('ebay');
+  const [source, setSource] = useState<'amazon' | 'ebay'>('ebay');
   const itemsPerPage = 12;
 
   // Calculate winning score based on your Python algorithm
@@ -174,30 +174,21 @@ const Index = () => {
       return;
     }
 
-    // Efface les anciens résultats avant de lancer la nouvelle recherche
     setProducts([]);
     setTopProduct(null);
     setStats(null);
-
     setIsLoading(true);
     setCurrentPage(1);
 
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
-      if (!apiUrl) {
-        throw new Error("URL API non configurée");
-      }
-      let endpoint = '';
-      if (source === 'ebay') endpoint = '/scrape_ebay';
-      else if (source === 'fnac') endpoint = '/scrape_fnac';
-      else if (source === 'cdiscount') endpoint = '/scrape_cdiscount';
-
+      let endpoint = source === 'amazon' ? '/scrape_amazon' : '/scrape_ebay';
       const response = await fetch(`${apiUrl}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           search_query: keyword,
-          num_products: 20
+          num_products: 50
         })
       });
 
@@ -211,53 +202,25 @@ const Index = () => {
         throw new Error(data.error || "Erreur lors du scraping");
       }
 
-      // Vérification et fallback si la réponse est vide ou mal formée
-      const products = Array.isArray(data.products) ? data.products : [];
-      setProducts(products);
-      setTopProduct(data.top_product || (products.length > 0 ? products[0] : null));
-
-      if (data.stats) {
-        setStats({
-          avgPrice: data.stats.avg_price || 0,
-          avgRating: data.stats.avg_rating || 0,
-          totalReviews: data.stats.total_reviews || 0,
-          totalProducts: data.stats.total_products || products.length
-        });
-      } else {
-        // Calcul fallback si stats absent
-        setStats({
-          avgPrice: products.length ? products.reduce((sum, p) => sum + (p.price || 0), 0) / products.length : 0,
-          avgRating: products.length ? products.reduce((sum, p) => sum + (p.rating || 0), 0) / products.length : 0,
-          totalReviews: products.length ? products.reduce((sum, p) => sum + (p.reviews || 0), 0) : 0,
-          totalProducts: products.length
-        });
-      }
-
-      // Détecter la langue pour l'affichage
-      const lang = detectLanguage(keyword);
-      setDetectedLanguage(lang === 'ar' ? 'Arabe' : lang === 'fr' ? 'Français' : 'Anglais');
-
+      setProducts(data.products || []);
+      setTopProduct(data.top_product || null);
+      setStats(data.stats || { total_products: (data.products || []).length });
       setIsLoading(false);
 
       toast({
         title: "🤖 Analyse IA Terminée !",
-        description: `${products.length} produits analysés par SynchroScale AI`,
+        description: `${(data.products || []).length} produits analysés`,
       });
-
-      console.log(`SynchroScale AI analysé ${products.length} produits pour: ${keyword}`);
-
     } catch (error) {
       setProducts([]);
       setTopProduct(null);
       setStats(null);
       setIsLoading(false);
-
       toast({
         title: "❌ Erreur API",
         description: error instanceof Error ? error.message : "Impossible de récupérer les données du backend.",
         variant: "destructive"
       });
-      console.error("Erreur lors de l'appel API:", error);
     }
   };
 
@@ -397,12 +360,11 @@ const Index = () => {
               <div className="flex gap-2">
                 <select
                   value={source}
-                  onChange={e => setSource(e.target.value as 'ebay' | 'fnac' | 'cdiscount')}
+                  onChange={e => setSource(e.target.value as 'amazon' | 'ebay')}
                   className="h-14 px-4 rounded-xl border border-gray-300 text-lg"
                 >
+                  <option value="amazon">Amazon</option>
                   <option value="ebay">eBay</option>
-                  <option value="fnac">Fnac</option>
-                  <option value="cdiscount">Cdiscount</option>
                 </select>
                 <Button
                   onClick={handleSearch}
