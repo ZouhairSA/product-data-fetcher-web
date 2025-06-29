@@ -42,7 +42,7 @@ const Index = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [detectedLanguage, setDetectedLanguage] = useState<string>('');
-  const [source, setSource] = useState<'amazon' | 'ebay'>('amazon');
+  const [source, setSource] = useState<'ebay' | 'fnac' | 'cdiscount'>('ebay');
   const itemsPerPage = 12;
 
   // Calculate winning score based on your Python algorithm
@@ -187,13 +187,17 @@ const Index = () => {
       if (!apiUrl) {
         throw new Error("URL API non configurée");
       }
-      const endpoint = source === 'amazon' ? '/scrape_amazon' : '/scrape_ebay';
+      let endpoint = '';
+      if (source === 'ebay') endpoint = '/scrape_ebay';
+      else if (source === 'fnac') endpoint = '/scrape_fnac';
+      else if (source === 'cdiscount') endpoint = '/scrape_cdiscount';
+
       const response = await fetch(`${apiUrl}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           search_query: keyword,
-          num_products: 50
+          num_products: 20
         })
       });
 
@@ -393,11 +397,12 @@ const Index = () => {
               <div className="flex gap-2">
                 <select
                   value={source}
-                  onChange={e => setSource(e.target.value as 'amazon' | 'ebay')}
+                  onChange={e => setSource(e.target.value as 'ebay' | 'fnac' | 'cdiscount')}
                   className="h-14 px-4 rounded-xl border border-gray-300 text-lg"
                 >
-                  <option value="amazon">Amazon</option>
                   <option value="ebay">eBay</option>
+                  <option value="fnac">Fnac</option>
+                  <option value="cdiscount">Cdiscount</option>
                 </select>
                 <Button
                   onClick={handleSearch}
@@ -457,7 +462,9 @@ const Index = () => {
               <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
                 <CardContent className="p-6 text-center">
                   <Package className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-blue-800">{stats.totalProducts}</p>
+                  <p className="text-2xl font-bold text-blue-800">
+                    {stats.totalProducts}
+                  </p>
                   <p className="text-sm text-blue-600">Produits Analysés</p>
                 </CardContent>
               </Card>
