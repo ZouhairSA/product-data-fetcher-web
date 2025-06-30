@@ -347,19 +347,19 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Enhanced Header with SynchroScale Branding */}
       <div className="bg-white/90 backdrop-blur-md border-b border-gray-200/50 sticky top-0 z-50 shadow-sm">
-        <div className="container mx-auto px-4 py-6">
+        <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-center">
             <div className="flex items-center">
               <img 
                 src="/lovable-uploads/336dbe2d-7314-4ff2-be63-da2f6039278f.png" 
                 alt="SynchroScale Logo" 
-                className="w-12 h-12 mr-4 drop-shadow-sm"
+                className="w-8 h-8 mr-2 drop-shadow-sm"
               />
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
                   SynchroScale
                 </h1>
-                <p className="text-sm text-gray-600 font-medium">Agent E-commerce Intelligent</p>
+                <p className="text-xs text-gray-600 font-medium">Agent E-commerce Intelligent</p>
               </div>
             </div>
           </div>
