@@ -172,6 +172,21 @@ const Index = () => {
       product.name.trim().toLowerCase() !== "shop on ebay"
   );
 
+  // Calculer les stats sur les produits filtrés
+  const filteredStats = {
+    totalProducts: filteredPaginatedProducts.length,
+    avgPrice:
+      filteredPaginatedProducts.length > 0
+        ? filteredPaginatedProducts.reduce((sum, p) => sum + p.price, 0) / filteredPaginatedProducts.length
+        : 0,
+    avgRating:
+      filteredPaginatedProducts.filter(p => p.rating > 0).length > 0
+        ? filteredPaginatedProducts.filter(p => p.rating > 0).reduce((sum, p) => sum + p.rating, 0) /
+          filteredPaginatedProducts.filter(p => p.rating > 0).length
+        : 0,
+    totalReviews: filteredPaginatedProducts.reduce((sum, p) => sum + p.reviews, 0),
+  };
+
   const handleSearch = async () => {
     if (!keyword.trim()) {
       toast({
@@ -441,7 +456,7 @@ const Index = () => {
                 <CardContent className="p-6 text-center">
                   <Package className="w-8 h-8 text-blue-600 mx-auto mb-2" />
                   <p className="text-2xl font-bold text-blue-800">
-                    {stats.totalProducts}
+                    {filteredStats.totalProducts}
                   </p>
                   <p className="text-sm text-blue-600">Produits Analysés</p>
                 </CardContent>
@@ -450,7 +465,7 @@ const Index = () => {
                 <CardContent className="p-6 text-center">
                   <TrendingUp className="w-8 h-8 text-green-600 mx-auto mb-2" />
                   <p className="text-2xl font-bold text-green-800">
-                    ${(stats?.avgPrice ?? 0).toFixed(2)}
+                    ${filteredStats.avgPrice.toFixed(2)}
                   </p>
                   <p className="text-sm text-green-600">Prix Moyen</p>
                 </CardContent>
@@ -459,7 +474,7 @@ const Index = () => {
                 <CardContent className="p-6 text-center">
                   <Star className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
                   <p className="text-2xl font-bold text-yellow-800">
-                    {(stats?.avgRating ?? 0).toFixed(1)}
+                    {filteredStats.avgRating.toFixed(1)}
                   </p>
                   <p className="text-sm text-yellow-600">Note Moyenne</p>
                 </CardContent>
@@ -468,7 +483,7 @@ const Index = () => {
                 <CardContent className="p-6 text-center">
                   <Award className="w-8 h-8 text-purple-600 mx-auto mb-2" />
                   <p className="text-2xl font-bold text-purple-800">
-                    {(stats?.totalReviews ?? 0).toLocaleString()}
+                    {filteredStats.totalReviews.toLocaleString()}
                   </p>
                   <p className="text-sm text-purple-600">Total Avis</p>
                 </CardContent>
