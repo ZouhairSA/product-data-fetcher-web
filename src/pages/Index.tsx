@@ -43,7 +43,6 @@ const Index = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [detectedLanguage, setDetectedLanguage] = useState<string>('');
   const [source, setSource] = useState<'amazon' | 'ebay'>('ebay');
-  const [numProducts, setNumProducts] = useState(50);
   const itemsPerPage = 12;
 
   // Historique des recherches (localStorage)
@@ -236,7 +235,7 @@ const Index = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           search_query: keyword,
-          num_products: numProducts
+          num_products: 50 // Remettre la valeur par défaut
         })
       });
 
@@ -412,19 +411,6 @@ const Index = () => {
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                   className="pl-12 h-14 text-lg border-0 focus:ring-0 bg-transparent placeholder:text-gray-400"
                 />
-              </div>
-              <div className="flex flex-col justify-center">
-                <input
-                  type="number"
-                  min={1}
-                  max={1000}
-                  value={numProducts}
-                  onChange={e => setNumProducts(Number(e.target.value))}
-                  className="h-14 w-24 px-2 rounded-xl border border-gray-300 text-lg text-center"
-                  placeholder="Nb prod."
-                  title="Nombre de produits à scraper"
-                />
-                <span className="text-xs text-gray-400 text-center">Nb produits</span>
               </div>
               <div className="flex gap-2">
                 <select
