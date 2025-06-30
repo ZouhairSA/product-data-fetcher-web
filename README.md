@@ -29,7 +29,7 @@ SynchroScale est un **Agent E-commerce Intelligent** spécialisé dans l'analyse
 ### 🧮 Algorithme de Score Gagnant
 
 Le score de chaque produit est calculé selon :
-- **Prix** : Optimisation du rapport qualité-prix (10-100€ = score optimal)
+- **Prix** : Optimisation du rapport qualité-prix (10-100€ =score optimal)
 - **Note client** : Rating Amazon (/5 étoiles)
 - **Popularité** : Nombre d'avis clients
 - **Score final** : Moyenne pondérée sur 100 points
