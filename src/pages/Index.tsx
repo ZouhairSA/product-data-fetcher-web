@@ -41,7 +41,7 @@ const Index = () => {
   const [topProduct, setTopProduct] = useState<Product | null>(null);
   const [stats, setStats] = useState<ScrapingStats | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [detectedLanguage, setDetectedLanguage] = useState<string>('');
   const [source, setSource] = useState<'amazon' | 'ebay'>('ebay');
   const itemsPerPage = 12;
