@@ -478,7 +478,9 @@ const Index = () => {
         )}
 
         {/* Enhanced Top Product Winner */}
-        {topProduct && (
+        {false && topProduct && (
+          // Bloc désactivé temporairement : affichage du Produit Gagnant IA
+          // Pour réactiver, remplacer {false && topProduct && (...)} par {topProduct && (...)}
           <div className="max-w-6xl mx-auto mb-12">
             <Card className="bg-gradient-to-r from-amber-50 via-orange-50 to-red-50 border-2 border-amber-300/50 shadow-2xl hover:shadow-3xl transition-all duration-300">
               <CardHeader className="pb-6">
