@@ -45,6 +45,24 @@ const Index = () => {
   const [source, setSource] = useState<'amazon' | 'ebay'>('ebay');
   const itemsPerPage = 12;
 
+  // Historique des recherches (localStorage)
+  const [searchHistory, setSearchHistory] = useState<{ keyword: string; source: string }[]>(() => {
+    // Charger l'historique depuis localStorage au démarrage
+    const saved = localStorage.getItem('searchHistory');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Fonction pour ajouter une recherche à l'historique
+  const addToHistory = (keyword: string, source: string) => {
+    if (!keyword.trim()) return;
+    const newEntry = { keyword, source };
+    // Évite les doublons consécutifs
+    let updated = searchHistory.filter(h => h.keyword !== keyword || h.source !== source);
+    updated = [newEntry, ...updated].slice(0, 5); // max 5 éléments
+    setSearchHistory(updated);
+    localStorage.setItem('searchHistory', JSON.stringify(updated));
+  };
+
   // Calculate winning score based on your Python algorithm
   const calculateWinningScore = (price: number, rating: number, reviewScore: number): number => {
     const priceScore = (price >= 10 && price <= 100) ? 0.5 : 0.2;
@@ -199,6 +217,9 @@ const Index = () => {
       });
       return;
     }
+
+    // Ajoute la recherche à l'historique
+    addToHistory(keyword, source);
 
     setProducts([]);
     setTopProduct(null);
@@ -419,6 +440,28 @@ const Index = () => {
                 </Button>
               </div>
             </div>
+
+            {/* Historique des recherches */}
+            {searchHistory.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2 items-center">
+                <span className="text-xs text-gray-400 mr-2">Dernières recherches :</span>
+                {searchHistory.map((item, idx) => (
+                  <Button
+                    key={item.keyword + item.source + idx}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs px-3 py-1 border-gray-300"
+                    onClick={() => {
+                      setKeyword(item.keyword);
+                      setSource(item.source as 'amazon' | 'ebay');
+                      setTimeout(() => handleSearch(), 0);
+                    }}
+                  >
+                    {item.keyword} <span className="ml-1 text-gray-400">[{item.source}]</span>
+                  </Button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Language Detection Display */}
