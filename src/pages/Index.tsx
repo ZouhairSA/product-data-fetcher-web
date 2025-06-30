@@ -164,6 +164,14 @@ const Index = () => {
     return products.slice(startIndex, startIndex + itemsPerPage);
   }, [products, currentPage, itemsPerPage]);
 
+  // Filtrer les produits sans nom ou avec "Shop on eBay"
+  const filteredPaginatedProducts = paginatedProducts.filter(
+    (product) =>
+      product.name &&
+      product.name.trim() !== "" &&
+      product.name.trim().toLowerCase() !== "shop on ebay"
+  );
+
   const handleSearch = async () => {
     if (!keyword.trim()) {
       toast({
@@ -579,7 +587,7 @@ const Index = () => {
             {/* Grid View */}
             {viewMode === 'grid' && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-                {paginatedProducts.map((product, index) => (
+                {filteredPaginatedProducts.map((product, index) => (
                   <Card 
                     key={product.sku} 
                     className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 shadow-md hover:-translate-y-1"
@@ -657,7 +665,7 @@ const Index = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {paginatedProducts.map((product, index) => (
+                        {filteredPaginatedProducts.map((product, index) => (
                           <tr 
                             key={product.sku} 
                             className="border-b hover:bg-teal-50/50 transition-colors cursor-pointer"
