@@ -187,6 +187,9 @@ const Index = () => {
     totalReviews: filteredPaginatedProducts.reduce((sum, p) => sum + p.reviews, 0),
   };
 
+  // Calculer le nombre total de produits récupérés (avant filtrage)
+  const totalFetchedProducts = products.length;
+
   const handleSearch = async () => {
     if (!keyword.trim()) {
       toast({
@@ -456,7 +459,7 @@ const Index = () => {
                 <CardContent className="p-6 text-center">
                   <Package className="w-8 h-8 text-blue-600 mx-auto mb-2" />
                   <p className="text-2xl font-bold text-blue-800">
-                    {filteredStats.totalProducts}
+                    {totalFetchedProducts}
                   </p>
                   <p className="text-sm text-blue-600">Produits Analysés</p>
                 </CardContent>
