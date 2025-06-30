@@ -107,16 +107,21 @@ Les contributions sont les bienvenues ! N'hésitez pas à :
 - Proposer de nouvelles fonctionnalités
 - Améliorer la documentation
 
-## 📝 Licence
+## 📦 Description du projet
+SynchroScale est une application web intelligente d’analyse comparative de produits e-commerce. Elle permet de rechercher, comparer et analyser des produits sur Amazon et eBay, avec détection automatique de la langue (français, anglais, arabe) et calcul de scores gagnants basés sur des critères objectifs (prix, note, nombre d’avis).
 
-Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
+L’interface moderne et responsive offre :
 
-## 📞 Support
+ - Un moteur de recherche multilingue
+ - Un filtrage automatique des résultats non pertinents
+ - Un dashboard de statistiques dynamiques (nombre de produits, prix moyen, note moyenne, total d’avis)
+ - Un historique des dernières recherches pour relancer facilement une analyse
+ - L’export des résultats en CSV
+Un affichage ergonomique en liste ou en grille
 
-Pour toute question ou support :
-- 📧 Email : support@synchroscale.com
-- 🌐 Site web : https://synchroscale.com
-- 💬 Discord : [SynchroScale Community]
+Le backend, développé en Python avec FastAPI, se charge du scraping, du calcul des scores et de la gestion des requêtes. Le frontend, réalisé en React/TypeScript, propose une expérience utilisateur fluide et intuitive.
+
+SynchroScale est conçu pour aider les professionnels et particuliers à prendre des décisions d’achat éclairées grâce à l’intelligence artificielle et à l’automatisation de la veille e-commerce.
 
 ---
 
