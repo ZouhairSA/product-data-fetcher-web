@@ -24,6 +24,7 @@ interface Product {
   badge: string;
   link: string;
   winningScore: number;
+  image?: string;
 }
 
 interface ScrapingStats {
@@ -44,6 +45,7 @@ const Index = () => {
   const [detectedLanguage, setDetectedLanguage] = useState<string>('');
   const [source, setSource] = useState<'amazon' | 'ebay'>('ebay');
   const itemsPerPage = 12;
+  const [showImages, setShowImages] = useState(false);
 
   // Historique des recherches (localStorage)
   const [searchHistory, setSearchHistory] = useState<{ keyword: string; source: string }[]>(() => {
@@ -606,6 +608,18 @@ const Index = () => {
         {/* Enhanced Results Section */}
         {products.length > 0 && (
           <div className="max-w-7xl mx-auto">
+            {/* Option d'affichage des images produits */}
+            <div className="flex items-center gap-2 mb-4">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showImages}
+                  onChange={() => setShowImages(v => !v)}
+                  className="mr-2"
+                />
+                Afficher les images produits
+              </label>
+            </div>
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
               <div>
                 <h3 className="text-3xl font-bold text-gray-800 mb-2">
@@ -658,7 +672,12 @@ const Index = () => {
                   >
                     <CardContent className="p-6">
                       <div className="aspect-square bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
-                        <Package className="w-12 h-12 text-gray-400" />
+                        {/* Affiche l'image si showImages est activé et product.image existe, sinon l'icône */}
+                        {showImages && product.image ? (
+                          <img src={product.image} alt={product.name} className="w-full h-full object-contain rounded-lg" />
+                        ) : (
+                          <Package className="w-12 h-12 text-gray-400" />
+                        )}
                       </div>
                       
                       <div className="flex items-center justify-between mb-2">
@@ -740,7 +759,11 @@ const Index = () => {
                               </Badge>
                             </td>
                             <td className="p-6">
-                              <div className="max-w-md">
+                              <div className="max-w-md flex items-center gap-2">
+                                {/* Affiche l'image si showImages est activé et product.image existe, sinon rien */}
+                                {showImages && product.image && (
+                                  <img src={product.image} alt={product.name} className="w-12 h-12 object-contain rounded-lg" />
+                                )}
                                 <p className="font-medium text-gray-800 line-clamp-2 hover:text-teal-600 transition-colors">
                                   {product.name}
                                 </p>
